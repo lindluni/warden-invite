@@ -115,6 +115,17 @@ async function main() {
                     username: username,
                     pm: pm
                 }
+                try {
+                    console.log('Creating failure comment')
+                    await client.issues.createComment({
+                        issue_number: issueNumber,
+                        owner: org,
+                        repo: repo,
+                        body: JSON.stringify(inputs)
+                    })
+                } catch (e) {
+                    fail(`Failed creating failure comment: ${e}`)
+                }
                 core.setFailed(`One of the required inputs is empty: ${JSON.stringify(inputs)}`)
             }
         }
@@ -135,6 +146,17 @@ async function main() {
             name: name,
             email: email,
             username: username
+        }
+        try {
+            console.log('Creating failure comment')
+            await client.issues.createComment({
+                issue_number: issueNumber,
+                owner: org,
+                repo: repo,
+                body: JSON.stringify(inputs)
+            })
+        } catch (e) {
+            fail(`Failed creating failure comment: ${e}`)
         }
         core.setFailed(`One of the required inputs is empty: ${JSON.stringify(inputs)}`)
     }
