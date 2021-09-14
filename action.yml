@@ -5,7 +5,7 @@ inputs:
   body:
     description: The body of the newly created issue
     required: true
-    default: ${{ github.event.issue.body }}
+    default: ${{ toJSON(github.event.issue.body) }}
   issue_number:
     description: The GitHub issue number
     required: true
