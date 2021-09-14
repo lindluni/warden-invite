@@ -30,6 +30,18 @@ inputs:
   token:
     description: GitHub Admin PAT to open issues and comment
     required: true
+  user:
+    description: G-Mail user who owns the secrets
+    required: true
+  secret:
+    description: G-Mail app password
+    required: true
+  from:
+    description: E-mail for the From header
+    required: true
+  template:
+    description: String template to form the email body from
+    required: true
 runs:
   using: node12
   main: dist/index.js

@@ -1,8 +1,10 @@
 const core = require('@actions/core')
+const nodemailer = require('nodemailer')
 
 const {Octokit} = require("@octokit/rest")
 const {retry} = require("@octokit/plugin-retry");
 const {throttling} = require("@octokit/plugin-throttling");
+const util = require("util");
 
 const body = core.getInput('BODY', {required: true}).trim()
 const org = core.getInput('ORG', {required: true, trimWhitespace: true}).trim()
@@ -13,6 +15,11 @@ const issueNumber = Number(core.getInput('ISSUE_NUMBER', {required: true, trimWh
 const token = core.getInput('TOKEN', {required: true, trimWhitespace: true}).trim()
 const successMessage = core.getInput('SUCCESS_MESSAGE', {required: true, trimWhitespace: true}).trim()
 
+// Email related inputs
+const user = core.getInput('USER', {required: true, trimWhitespace: true}).trim()
+const from = core.getInput('FROM', {required: true, trimWhitespace: true}).trim()
+const secret = core.getInput('SECRET', {required: true, trimWhitespace: true}).trim()
+const template = core.getInput('TEMPLATE', {required: true, trimWhitespace: true}).trim()
 
 const _Octokit = Octokit.plugin(retry, throttling)
 const client = new _Octokit({
@@ -99,15 +106,20 @@ async function main() {
                 fail(`Failed creating invitation: ${e}`)
             }
             try {
-                console.log('Creating approval comment')
-                await client.issues.createComment({
-                    issue_number: issueNumber,
-                    owner: org,
-                    repo: repo,
-                    body: `/approve --pm ${pm} --name ${name} --email ${email}`
-                })
+                console.log('Sending email')
+                await sendEmail(name, email, pm)
             } catch (e) {
-                fail(`Failed creating approval comment: ${e}`)
+                try {
+                    console.log('Creating failure comment')
+                    await client.issues.createComment({
+                        issue_number: issueNumber,
+                        owner: org,
+                        repo: repo,
+                        body: `Unable to send email: ${e}`
+                    })
+                } catch (e) {
+                    fail(`Failed creating failure comment: ${e}`)
+                }
             }
         } else {
             try {
@@ -121,7 +133,7 @@ async function main() {
             } catch (e) {
                 fail(`Failed creating failure comment: ${e}`)
             }
-            fail(`PM/COR email must be in the ${suffix} domain, please update the original`)
+            fail(`PM/COR email must be in the ${suffix} domain, please update the original information`)
         }
     }
 
@@ -135,6 +147,38 @@ async function main() {
         })
     } catch (e) {
         fail(`Failed creating success comment: ${e}`)
+    }
+}
+
+async function sendEmail(name, email, pm) {
+    try {
+        const transporter = await nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: user,
+                pass: secret,
+            },
+        });
+
+        await transporter.sendMail({
+            from: from,
+            to: pm,
+            subject: "User Access Request Approval",
+            text: util.format(template, name, email, issueNumber)
+        })
+    } catch (e) {
+        fail(`Failed sending email: ${e}`)
+    }
+
+    try {
+        await client.issues.addLabels({
+            owner: org,
+            repo: repo,
+            issue_number: issueNumber,
+            labels: ['email-sent']
+        })
+    } catch (e) {
+        fail(`Failed adding email-sent label: ${e}`)
     }
 }
 
