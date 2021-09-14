@@ -109,12 +109,6 @@ async function main() {
                 fail(`Failed creating approval comment: ${e}`)
             }
         } else {
-            const inputs = {
-                name: name,
-                email: email,
-                username: username,
-                pm: pm
-            }
             try {
                 console.log('Creating failure comment')
                 await client.issues.createComment({
@@ -126,7 +120,8 @@ async function main() {
             } catch (e) {
                 fail(`Failed creating failure comment: ${e}`)
             }
-            core.setFailed(`PM/COR: ${JSON.stringify(inputs)}`)
+            core.setFailed(`PM/COR email must be in the ${suffix} domain, please update the original`)
+            process.exit(1)
         }
     }
 
