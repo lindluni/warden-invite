@@ -33,10 +33,11 @@ const client = new _Octokit({
 })
 
 async function main() {
-    const name = body.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
-    const email = body.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
-    const pm = body.match(new RegExp('PM/COR Email.+'))[0].split('\\n\\n')[1].trim()
-    let username = body.match(new RegExp('GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
+    const filteredBody = body.trim().substr(1, body.length - 1)
+    const name = filteredBody.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
+    const email = filteredBody.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
+    const pm = filteredBody.match(new RegExp('PM/COR Email.+'))[0].split('\\n\\n')[1].trim()
+    let username = filteredBody.match(new RegExp('GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
     if (username.includes('@')) {
         username = username.substr(1)
     }
