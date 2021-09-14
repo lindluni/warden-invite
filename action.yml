@@ -30,16 +30,16 @@ inputs:
   token:
     description: GitHub Admin PAT to open issues and comment
     required: true
-  user:
+  gmail_user:
     description: G-Mail user who owns the secrets
     required: true
-  secret:
+  gmail_secret:
     description: G-Mail app password
     required: true
-  from:
+  gmail_from:
     description: E-mail for the From header
     required: true
-  template:
+  gmail_template:
     description: String template to form the email body from
     required: true
 runs:

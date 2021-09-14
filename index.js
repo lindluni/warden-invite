@@ -16,10 +16,10 @@ const token = core.getInput('TOKEN', {required: true, trimWhitespace: true}).tri
 const successMessage = core.getInput('SUCCESS_MESSAGE', {required: true, trimWhitespace: true}).trim()
 
 // Email related inputs
-const user = core.getInput('USER', {required: true, trimWhitespace: true}).trim()
-const from = core.getInput('FROM', {required: true, trimWhitespace: true}).trim()
-const secret = core.getInput('SECRET', {required: true, trimWhitespace: true}).trim()
-const template = core.getInput('TEMPLATE', {required: true, trimWhitespace: true}).trim()
+const user = core.getInput('GMAIL_USER', {required: true, trimWhitespace: true}).trim()
+const from = core.getInput('GMAIL_FROM', {required: true, trimWhitespace: true}).trim()
+const secret = core.getInput('GMAIL_SECRET', {required: true, trimWhitespace: true}).trim()
+const template = core.getInput('GMAIL_TEMPLATE', {required: true, trimWhitespace: true}).trim()
 
 const _Octokit = Octokit.plugin(retry, throttling)
 const client = new _Octokit({
