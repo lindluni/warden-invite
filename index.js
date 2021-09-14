@@ -120,8 +120,7 @@ async function main() {
             } catch (e) {
                 fail(`Failed creating failure comment: ${e}`)
             }
-            core.setFailed(`PM/COR email must be in the ${suffix} domain, please update the original`)
-            process.exit(1)
+            fail(`PM/COR email must be in the ${suffix} domain, please update the original`)
         }
     }
 
