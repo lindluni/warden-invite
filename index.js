@@ -13,6 +13,7 @@ const issueNumber = Number(core.getInput('ISSUE_NUMBER', {required: true, trimWh
 const token = core.getInput('TOKEN', {required: true, trimWhitespace: true})
 const successMessage = core.getInput('SUCCESS_MESSAGE', {required: true, trimWhitespace: true})
 
+
 const _Octokit = Octokit.plugin(retry, throttling)
 const client = new _Octokit({
     auth: token,
@@ -32,133 +33,113 @@ const client = new _Octokit({
 })
 
 async function main() {
-    const name = body.match(new RegExp('Name \\(required\\):.+\r?\n'))[0].split(':')[1].trim()
-    const email = body.match(new RegExp('Email \\(required\\):.+\r?\n'))[0].split(':')[1].trim()
-    const pm = body.match(new RegExp('Point of Contact Email \\(required\\):.+\r?\n?'))[0].split(':')[1].trim()
-
-    let username = body.match(new RegExp('Github Username \\(required\\):.+\r?\n'))[0].split(':')[1].trim()
+    const name = body.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
+    const email = body.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
+    const pm = body.match(new RegExp('PM/COR Email.+'))[0].split('\\n\\n')[1].trim()
+    let username = body.match(new RegExp('GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
     if (username.includes('@')) {
         username = username.substr(1)
     }
-    if (name !== '' && email !== '' && username !== '') {
-        let user
-        let team
-        try {
-            console.log(`Fetching user information for ${username}`)
-            user = await client.users.getByUsername({
-                username: username
-            })
-        } catch (e) {
-            fail(`Failed fetching user information: ${e}`)
-        }
 
+    let user
+    let team
+    try {
+        console.log(`Fetching user information for ${username}`)
+        user = await client.users.getByUsername({
+            username: username
+        })
+    } catch (e) {
+        fail(`Failed fetching user information: ${e}`)
+    }
+
+    try {
+        console.log(`Retrieving team information`)
+        team = await client.teams.getByName({
+            org: org,
+            team_slug: teamName
+        })
+    } catch (e) {
+        fail(`Failed fetching team information: ${e}`)
+    }
+    if (email.includes(suffix)) {
         try {
-            console.log(`Retrieving team information`)
-            team = await client.teams.getByName({
+            console.log('Creating invitation')
+            await client.orgs.createInvitation({
                 org: org,
-                team_slug: teamName
+                invitee_id: user.data.id,
+                role: 'direct_member',
+                team_ids: [team.data.id]
             })
         } catch (e) {
-            fail(`Failed fetching team information: ${e}`)
+            fail(`Failed creating invitation: ${e}`)
         }
-        if (email.includes(suffix)) {
+        try {
+            console.log('Closing issue as it requires no approval')
+            await client.issues.update({
+                issue_number: issueNumber,
+                owner: org,
+                repo: repo,
+                state: 'closed'
+            })
+        } catch (e) {
+            fail(`Failed closing issue: ${e}`)
+        }
+    } else {
+        if (pm.includes(suffix)) {
             try {
                 console.log('Creating invitation')
                 await client.orgs.createInvitation({
                     org: org,
                     invitee_id: user.data.id,
                     role: 'direct_member',
-                    team_ids: [team.data.id]
+                    team_ids: [team.data.id],
                 })
             } catch (e) {
                 fail(`Failed creating invitation: ${e}`)
             }
             try {
-                console.log('Closing issue as it requires no approval')
-                await client.issues.update({
+                console.log('Creating approval comment')
+                await client.issues.createComment({
                     issue_number: issueNumber,
                     owner: org,
                     repo: repo,
-                    state: 'closed'
+                    body: `/approve --pm ${pm} --name ${name} --email ${email}`
                 })
             } catch (e) {
-                fail(`Failed closing issue: ${e}`)
+                fail(`Failed creating approval comment: ${e}`)
             }
         } else {
-            if (pm !== '') {
-                try {
-                    console.log('Creating invitation')
-                    await client.orgs.createInvitation({
-                        org: org,
-                        invitee_id: user.data.id,
-                        role: 'direct_member',
-                        team_ids: [team.data.id],
-                    })
-                } catch (e) {
-                    fail(`Failed creating invitation: ${e}`)
-                }
-                try {
-                    console.log('Creating approval comment')
-                    await client.issues.createComment({
-                        issue_number: issueNumber,
-                        owner: org,
-                        repo: repo,
-                        body: `/approve --pm ${pm} --name ${name} --email ${email}`
-                    })
-                } catch (e) {
-                    fail(`Failed creating approval comment: ${e}`)
-                }
-            } else {
-                const inputs = {
-                    name: name,
-                    email: email,
-                    username: username,
-                    pm: pm
-                }
-                try {
-                    console.log('Creating failure comment')
-                    await client.issues.createComment({
-                        issue_number: issueNumber,
-                        owner: org,
-                        repo: repo,
-                        body: JSON.stringify(inputs)
-                    })
-                } catch (e) {
-                    fail(`Failed creating failure comment: ${e}`)
-                }
-                core.setFailed(`One of the required inputs is empty: ${JSON.stringify(inputs)}`)
+            const inputs = {
+                name: name,
+                email: email,
+                username: username,
+                pm: pm
             }
+            try {
+                console.log('Creating failure comment')
+                await client.issues.createComment({
+                    issue_number: issueNumber,
+                    owner: org,
+                    repo: repo,
+                    body: `PM/COR email must be in the ${suffix} domain, please update the original`
+                })
+            } catch (e) {
+                fail(`Failed creating failure comment: ${e}`)
+            }
+            core.setFailed(`PM/COR: ${JSON.stringify(inputs)}`)
         }
+    }
 
-        try {
-            console.log('Creating success comment')
-            await client.issues.createComment({
-                issue_number: issueNumber,
-                owner: org,
-                repo: repo,
-                body: successMessage
-            })
-        } catch (e) {
-            fail(`Failed creating success comment: ${e}`)
-        }
-    } else {
-        const inputs = {
-            name: name,
-            email: email,
-            username: username
-        }
-        try {
-            console.log('Creating failure comment')
-            await client.issues.createComment({
-                issue_number: issueNumber,
-                owner: org,
-                repo: repo,
-                body: JSON.stringify(inputs)
-            })
-        } catch (e) {
-            fail(`Failed creating failure comment: ${e}`)
-        }
-        core.setFailed(`One of the required inputs is empty: ${JSON.stringify(inputs)}`)
+    try {
+        console.log('Creating success comment')
+        await client.issues.createComment({
+            issue_number: issueNumber,
+            owner: org,
+            repo: repo,
+            body: successMessage
+        })
+    } catch (e) {
+        fail(`Failed creating success comment: ${e}`)
     }
 }
 
