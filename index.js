@@ -4,14 +4,14 @@ const {Octokit} = require("@octokit/rest")
 const {retry} = require("@octokit/plugin-retry");
 const {throttling} = require("@octokit/plugin-throttling");
 
-const body = core.getInput('BODY', {required: true})
-const org = core.getInput('ORG', {required: true, trimWhitespace: true})
-const teamName = core.getInput('TEAM', {required: true, trimWhitespace: true})
-const repo = core.getInput('REPO', {required: true, trimWhitespace: true})
-const suffix = core.getInput('SUFFIX', {required: true, trimWhitespace: true})
-const issueNumber = Number(core.getInput('ISSUE_NUMBER', {required: true, trimWhitespace: true}))
-const token = core.getInput('TOKEN', {required: true, trimWhitespace: true})
-const successMessage = core.getInput('SUCCESS_MESSAGE', {required: true, trimWhitespace: true})
+const body = core.getInput('BODY', {required: true}).trim()
+const org = core.getInput('ORG', {required: true, trimWhitespace: true}).trim()
+const teamName = core.getInput('TEAM', {required: true, trimWhitespace: true}).trim()
+const repo = core.getInput('REPO', {required: true, trimWhitespace: true}).trim()
+const suffix = core.getInput('SUFFIX', {required: true, trimWhitespace: true}).trim()
+const issueNumber = Number(core.getInput('ISSUE_NUMBER', {required: true, trimWhitespace: true}).trim())
+const token = core.getInput('TOKEN', {required: true, trimWhitespace: true}).trim()
+const successMessage = core.getInput('SUCCESS_MESSAGE', {required: true, trimWhitespace: true}).trim()
 
 
 const _Octokit = Octokit.plugin(retry, throttling)
@@ -33,7 +33,7 @@ const client = new _Octokit({
 })
 
 async function main() {
-    const filteredBody = body.trim().substr(1, body.length - 1)
+    const filteredBody = body.substr(1, body.length - 2) // Trim quotes off end
     const name = filteredBody.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
     const email = filteredBody.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
     const pm = filteredBody.match(new RegExp('PM/COR Email.+'))[0].split('\\n\\n')[1].trim()
