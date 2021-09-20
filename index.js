@@ -109,7 +109,7 @@ async function main() {
             }
             try {
                 console.log('Sending email')
-                await sendEmail(name, email, pm)
+                await sendEmail(name, email, pm, contract)
             } catch (e) {
                 try {
                     console.log('Creating failure comment')
