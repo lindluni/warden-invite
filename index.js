@@ -43,7 +43,9 @@ async function main() {
     const filteredBody = body.substr(1, body.length - 2) // Trim quotes off end
     const name = filteredBody.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
     const email = filteredBody.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
-    const pm = filteredBody.match(new RegExp('PM/COR Email.+'))[0].split('\\n\\n')[1].trim()
+    const pm = filteredBody.match(new RegExp('PM/COR Email.+###'))[0].split('\\n\\n')[1].trim()
+    const contract = filteredBody.match(new RegExp('Assigned Contract.+'))[0].split('\\n\\n')[1].trim()
+
     let username = filteredBody.match(new RegExp('GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
     if (username.includes('@')) {
         username = username.substr(1)
@@ -150,7 +152,7 @@ async function main() {
     }
 }
 
-async function sendEmail(name, email, pm) {
+async function sendEmail(name, email, pm, contract) {
     try {
         const transporter = await nodemailer.createTransport({
             service: 'gmail',
@@ -164,7 +166,7 @@ async function sendEmail(name, email, pm) {
             from: from,
             to: pm,
             subject: "User Access Request Approval",
-            text: util.format(template, name, email, issueNumber)
+            text: util.format(template, name, email, contract, issueNumber)
         })
     } catch (e) {
         fail(`Failed sending email: ${e}`)
