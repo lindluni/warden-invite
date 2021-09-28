@@ -13,7 +13,7 @@ const issueNumber = Number(core.getInput('ISSUE_NUMBER', {required: true, trimWh
 const token = core.getInput('TOKEN', {required: true, trimWhitespace: true}).trim()
 const successMessage = core.getInput('SUCCESS_MESSAGE', {required: true, trimWhitespace: true}).trim()
 
-const template = core.getInput('GMAIL_TEMPLATE', {required: true, trimWhitespace: true}).trim()
+const template = core.getInput('TEMPLATE', {required: true, trimWhitespace: true}).trim()
 
 const _Octokit = Octokit.plugin(retry, throttling)
 const client = new _Octokit({
