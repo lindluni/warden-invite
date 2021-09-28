@@ -145,7 +145,7 @@ async function sendNotification(client, pmUsername, name, email, pm, contract) {
             body: successMessage
         })
         core.info(`Creating approval comment`)
-        await client.issue.createComment({
+        await client.issues.createComment({
             owner: org,
             repo: repo,
             issue_number: issueNumber,
