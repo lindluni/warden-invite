@@ -79,6 +79,13 @@ async function main() {
             fail(`Failed creating invitation: ${e}`)
         }
         try {
+            core.info('Creating success comment')
+            await client.issues.createComment({
+                issue_number: issueNumber,
+                owner: org,
+                repo: repo,
+                body: successMessage
+            })
             core.info('Closing issue as it requires no approval')
             await client.issues.update({
                 issue_number: issueNumber,
