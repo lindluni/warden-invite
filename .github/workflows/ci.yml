@@ -23,6 +23,7 @@ jobs:
         run: npm run build
       - name: Verify
         run: |
+          set -x
           count=$(git status | grep -c modified)
           if [[ $count -gt 0 ]]; then
               echo "It looks like you forgot to run 'npm run build', please run this command and recommit"
