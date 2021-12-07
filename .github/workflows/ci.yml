@@ -21,6 +21,3 @@ jobs:
         run: npm run build
       - name: Verify
         run: ./.github/workflows/verify.sh
-      - name: Setup tmate session
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
