@@ -36,7 +36,6 @@ const client = new _Octokit({
 async function main() {
     const filteredBody = body.substr(1, body.length - 2).replace(/\\r\\n/g, '\\n'); // Trim quotes off end and replace carriage returns
     const name = filteredBody.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
-    core.info('name is:  ' + name);
     const email = filteredBody.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
     const pm = filteredBody.match(new RegExp('PM/COR Email.+###'))[0].split('\\n\\n')[1].trim()
     const pmUsername = filteredBody.match(new RegExp('PM/COR GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
