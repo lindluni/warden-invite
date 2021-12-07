@@ -23,6 +23,7 @@ jobs:
         run: npm run build
       - name: Verify
         run: |
+          $!/usr/bin/env bash
           set -x
           count=$(git status | grep -c modified)
           if [[ $count -gt 0 ]]; then
