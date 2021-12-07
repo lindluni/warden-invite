@@ -1,0 +1,29 @@
+name: CI
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+      - name: Build
+        run: npm run build
+      - name: Verify
+        run: |
+          count=$(git status | grep -c modified)
+          if [[ $count -gt 0 ]]; then
+              echo "It looks like you forgot to run 'npm run build', please run this command and recommit"
+              exit 1
+          fi
+          echo "No new files detected"
