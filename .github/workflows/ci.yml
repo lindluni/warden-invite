@@ -22,15 +22,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Verify
-        run: |
-          $!/usr/bin/env bash
-          set -x
-          count=$(git status | grep -c modified)
-          if [[ $count -gt 0 ]]; then
-              echo "It looks like you forgot to run 'npm run build', please run this command and recommit"
-              exit 1
-          fi
-          echo "No new files detected"
+        run: ./github/workflows/verify.sh
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
