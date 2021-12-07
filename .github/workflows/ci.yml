@@ -13,8 +13,6 @@ jobs:
     steps:
       - name: Install dependencies
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
@@ -22,7 +20,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Verify
-        run: ./github/workflows/verify.sh
+        run: ./.github/workflows/verify.sh
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
