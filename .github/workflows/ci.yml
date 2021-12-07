@@ -31,3 +31,6 @@ jobs:
               exit 1
           fi
           echo "No new files detected"
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
