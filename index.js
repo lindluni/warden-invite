@@ -1,4 +1,6 @@
 const core = require('@actions/core')
+const nodemailer = require('nodemailer')
+
 const {Octokit} = require("@octokit/rest")
 const {retry} = require("@octokit/plugin-retry");
 const {throttling} = require("@octokit/plugin-throttling");
@@ -13,7 +15,10 @@ const issueNumber = Number(core.getInput('ISSUE_NUMBER', {required: true, trimWh
 const token = core.getInput('TOKEN', {required: true, trimWhitespace: true}).trim()
 const successMessage = core.getInput('SUCCESS_MESSAGE', {required: true, trimWhitespace: true}).trim()
 
-const template = core.getInput('TEMPLATE', {required: true, trimWhitespace: true}).trim()
+const user = core.getInput('GMAIL_USER', {required: true, trimWhitespace: true}).trim()
+const from = core.getInput('GMAIL_FROM', {required: true, trimWhitespace: true}).trim()
+const secret = core.getInput('GMAIL_SECRET', {required: true, trimWhitespace: true}).trim()
+const template = core.getInput('GMAIL_TEMPLATE', {required: true, trimWhitespace: true}).trim()
 
 const _Octokit = Octokit.plugin(retry, throttling)
 const client = new _Octokit({
@@ -38,7 +43,6 @@ async function main() {
     const name = filteredBody.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
     const email = filteredBody.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
     const pm = filteredBody.match(new RegExp('PM/COR Email.+###'))[0].split('\\n\\n')[1].trim()
-    const pmUsername = filteredBody.match(new RegExp('PM/COR GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
     const contract = filteredBody.match(new RegExp('Assigned Contract.+'))[0].split('\\n\\n')[1].trim()
 
     let username = filteredBody.match(new RegExp('GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
@@ -49,7 +53,7 @@ async function main() {
     let user
     let team
     try {
-        core.info(`Fetching user information for ${username}`)
+        console.log(`Fetching user information for ${username}`)
         user = await client.users.getByUsername({
             username: username
         })
@@ -58,7 +62,7 @@ async function main() {
     }
 
     try {
-        core.info(`Retrieving team information`)
+        console.log(`Retrieving team information`)
         team = await client.teams.getByName({
             org: org,
             team_slug: teamName
@@ -68,7 +72,7 @@ async function main() {
     }
     if (email.includes(suffix)) {
         try {
-            core.info('Creating invitation')
+            console.log('Creating invitation')
             await client.orgs.createInvitation({
                 org: org,
                 invitee_id: user.data.id,
@@ -99,7 +103,7 @@ async function main() {
     } else {
         if (pm.includes(suffix)) {
             try {
-                core.info('Creating invitation')
+                console.log('Creating invitation')
                 await client.orgs.createInvitation({
                     org: org,
                     invitee_id: user.data.id,
@@ -110,11 +114,11 @@ async function main() {
                 fail(`Failed creating invitation: ${e}`)
             }
             try {
-                core.info('Sending notification')
-                await sendNotification(client, pmUsername, name, email, pm, contract)
+                console.log('Sending email')
+                await sendEmail(name, email, pm, contract)
             } catch (e) {
                 try {
-                    core.info('Creating failure comment')
+                    console.log('Creating failure comment')
                     await client.issues.createComment({
                         issue_number: issueNumber,
                         owner: org,
@@ -127,7 +131,7 @@ async function main() {
             }
         } else {
             try {
-                core.info('Creating failure comment')
+                console.log('Creating failure comment')
                 await client.issues.createComment({
                     issue_number: issueNumber,
                     owner: org,
@@ -140,26 +144,38 @@ async function main() {
             fail(`PM/COR email must be in the ${suffix} domain, please update the original information`)
         }
     }
-}
 
-async function sendNotification(client, pmUsername, name, email, pm, contract) {
     try {
-        core.info('Creating success comment')
+        console.log('Creating success comment')
         await client.issues.createComment({
             issue_number: issueNumber,
             owner: org,
             repo: repo,
             body: successMessage
         })
-        core.info(`Creating approval comment`)
-        await client.issues.createComment({
-            owner: org,
-            repo: repo,
-            issue_number: issueNumber,
-            body: `@${pmUsername}\n\n${util.format(template, name, email, contract, issueNumber)}`
+    } catch (e) {
+        fail(`Failed creating success comment: ${e}`)
+    }
+}
+
+async function sendEmail(name, email, pm, contract) {
+    try {
+        const transporter = await nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: user,
+                pass: secret,
+            },
+        });
+
+        await transporter.sendMail({
+            from: from,
+            to: pm,
+            subject: "User Access Request Approval",
+            text: util.format(template, name, email, contract, issueNumber)
         })
     } catch (e) {
-        fail(`Failed sending notification: ${e}`)
+        fail(`Failed sending email: ${e}`)
     }
 
     try {
@@ -167,7 +183,7 @@ async function sendNotification(client, pmUsername, name, email, pm, contract) {
             owner: org,
             repo: repo,
             issue_number: issueNumber,
-            labels: ['pm-notified']
+            labels: ['email-sent']
         })
     } catch (e) {
         fail(`Failed adding email-sent label: ${e}`)
