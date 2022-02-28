@@ -43,7 +43,6 @@ async function main() {
     const name = filteredBody.match(new RegExp('Full Name.+###'))[0].split('\\n\\n')[1].trim()
     const email = filteredBody.match(new RegExp('Email.+###'))[0].split('\\n\\n')[1].trim()
     const pm = filteredBody.match(new RegExp('PM/COR Email.+###'))[0].split('\\n\\n')[1].trim()
-    const contract = filteredBody.match(new RegExp('Assigned Contract.+'))[0].split('\\n\\n')[1].trim()
 
     let username = filteredBody.match(new RegExp('GitHub Username.+###'))[0].split('\\n\\n')[1].trim()
     if (username.includes('@')) {
@@ -115,7 +114,7 @@ async function main() {
             }
             try {
                 console.log('Sending email')
-                await sendEmail(name, email, pm, contract)
+                await sendEmail(name, email, pm)
             } catch (e) {
                 try {
                     console.log('Creating failure comment')
@@ -158,7 +157,7 @@ async function main() {
     }
 }
 
-async function sendEmail(name, email, pm, contract) {
+async function sendEmail(name, email, pm) {
     try {
         const transporter = await nodemailer.createTransport({
             service: 'gmail',
@@ -172,7 +171,7 @@ async function sendEmail(name, email, pm, contract) {
             from: from,
             to: pm,
             subject: "User Access Request Approval",
-            text: util.format(template, name, email, contract, issueNumber)
+            text: util.format(template, name, email, issueNumber)
         })
     } catch (e) {
         fail(`Failed sending email: ${e}`)
