@@ -42,6 +42,9 @@ inputs:
   gmail_template:
     description: String template to form the email body from
     required: true
+  gmail_reply_to:
+    description: E-mail for the Reply-To header
+    required: true
 runs:
   using: node12
   main: dist/index.js
