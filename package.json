@@ -12,7 +12,7 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@octokit/plugin-retry": "^3.0.9",
-    "@octokit/plugin-throttling": "^3.5.2",
+    "@octokit/plugin-throttling": "^3.6.1",
     "@octokit/rest": "^18.12.0",
     "nodemailer": "^6.7.2"
   },

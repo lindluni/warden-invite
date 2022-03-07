@@ -20933,6 +20933,7 @@ const user = core.getInput('GMAIL_USER', {required: true, trimWhitespace: true})
 const from = core.getInput('GMAIL_FROM', {required: true, trimWhitespace: true}).trim()
 const secret = core.getInput('GMAIL_SECRET', {required: true, trimWhitespace: true}).trim()
 const template = core.getInput('GMAIL_TEMPLATE', {required: true, trimWhitespace: true}).trim()
+const replyTo = core.getInput('GMAIL_REPLY_TO', {required: true, trimWhitespace: true}).trim()
 
 const _Octokit = Octokit.plugin(retry, throttling)
 const client = new _Octokit({
@@ -21084,6 +21085,7 @@ async function sendEmail(name, email, pm) {
         await transporter.sendMail({
             from: from,
             to: pm,
+            replyTo: replyTo,
             subject: "User Access Request Approval",
             text: util.format(template, name, email, issueNumber)
         })
