@@ -46,5 +46,5 @@ inputs:
     description: E-mail for the Reply-To header
     required: true
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
